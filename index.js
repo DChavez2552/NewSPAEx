@@ -1,19 +1,14 @@
 import { Header, Nav, Main, Footer } from "./components";
 import * as state from "./store";
-
+import axios from "axios";
 import Navigo from "navigo";
 import { capitalize } from "lodash";
 
 const router = new Navigo(window.location.origin);
 
-router
-  .on({
-    ":page": (params) => render(state[capitalize(params.page)]),
-    "/": () => render(state.Home),
-  })
-  .resolve();
-
 function render(st = state.Home) {
+
+  console.log("state",st);
   document.querySelector("#root").innerHTML = `
   ${Header(st)}
   ${Nav(state.Links)}
@@ -28,8 +23,8 @@ function render(st = state.Home) {
 
 function addEventListeners(st) {
   // add event listeners to Nav items for navigation
-  document.querySelectorAll("nav a").forEach((navLink) =>
-    navLink.addEventListener("click", (event) => {
+  document.querySelectorAll("nav a").forEach(navLink =>
+    navLink.addEventListener("click", event => {
       event.preventDefault();
       render(state[event.target.title]);
     })
@@ -44,7 +39,7 @@ function addEventListeners(st) {
 
   // event listener for the the photo form
   if (st.view === "Form") {
-    document.querySelector("form").addEventListener("submit", (event) => {
+    document.querySelector("form").addEventListener("submit", event => {
       event.preventDefault();
       // convert HTML elements to Array
       let inputList = Array.from(event.target.elements);
@@ -61,3 +56,41 @@ function addEventListeners(st) {
     });
   }
 }
+
+router.hooks({
+  before: (done, params) => {
+    const page = params && params.hasOwnProperty("page") ? capitalize(params.page) : "Home";
+
+    console.log("page", page);
+    switch(page) {
+
+      case "Pizzas":
+        state.Pizzas.pizzas = [];
+        axios.get(`http://localhost:4040/pizzas`).then(response => {
+          console.log("Pizzas", response.data);
+          state.Pizzas.pizzas = response.data;
+          done();
+        });
+        break;
+
+      case "Blog":
+        state.Blog.posts = [];
+        axios.get("https://jsonplaceholder.typicode.com/posts").then(response => {
+          response.data.forEach(post => {
+            state.Blog.posts.push(post);
+          });
+          done();
+        });
+        break;
+      default:
+        done();
+    }
+  }
+});
+
+router
+  .on({
+    "/": () => render(state.Home),
+    ":page": params => render(state[capitalize(params.page)])
+  })
+  .resolve();

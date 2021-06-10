@@ -7,7 +7,8 @@ export default (links) => html`
       ${links.map(
         (el) =>
           `<li><a href="/${el.title}" title="${el.title}" data-navigo>${el.text}</a></li>`
-      )}
+      )
+      .join("")}
     </ul>
   </nav>
 `;
