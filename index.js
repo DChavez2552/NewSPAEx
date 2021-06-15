@@ -66,7 +66,7 @@ router.hooks({
 
       case "Pizzas":
         state.Pizzas.pizzas = [];
-        axios.get(`http://localhost:4040/pizzas`).then(response => {
+        axios.get(`${process.env.APIURL}/pizzas`).then(response => {
           console.log("Pizzas", response.data);
           state.Pizzas.pizzas = response.data;
           done();
